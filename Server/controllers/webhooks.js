@@ -1,9 +1,10 @@
 import { Webhook } from "svix";
 import User from "../models/User.js";
 import stripe from "stripe";
-import { Purchase } from "../models/Purchase.js";
-import Course from "../models/Course.js";
 
+// Commented because files are missing currently
+// import { Purchase } from "../models/Purchase.js";
+// import Course from "../models/Course.js";
 
 
 // API Controller Function to Manage Clerk User with database
@@ -23,7 +24,7 @@ export const clerkWebhooks = async (req, res) => {
     // Getting Data from request body
     const { data, type } = req.body
 
-    // Switch Cases for differernt Events
+    // Switch Cases for different Events
     switch (type) {
       case 'user.created': {
 
@@ -34,28 +35,34 @@ export const clerkWebhooks = async (req, res) => {
           imageUrl: data.image_url,
           resume: ''
         }
+
         await User.create(userData)
         res.json({})
         break;
       }
 
       case 'user.updated': {
+
         const userData = {
           email: data.email_addresses[0].email_address,
           name: data.first_name + " " + data.last_name,
           imageUrl: data.image_url,
         }
+
         await User.findByIdAndUpdate(data.id, userData)
         res.json({})
         break;
       }
 
       case 'user.deleted': {
+
         await User.findByIdAndDelete(data.id)
         res.json({})
         break;
       }
+
       default:
+        res.json({})
         break;
     }
 
@@ -71,25 +78,31 @@ const stripeInstance = new stripe(process.env.STRIPE_SECRET_KEY)
 
 // Stripe Webhooks to Manage Payments Action
 export const stripeWebhooks = async (request, response) => {
+
+  /*
+  Commented temporarily because Purchase.js and Course.js files are missing.
+
   const sig = request.headers['stripe-signature'];
 
   let event;
 
   try {
-    event = stripeInstance.webhooks.constructEvent(request.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
-  }
-  catch (err) {
-    response.status(400).send(`Webhook Error: ${err.message}`);
+    event = stripeInstance.webhooks.constructEvent(
+      request.body,
+      sig,
+      process.env.STRIPE_WEBHOOK_SECRET
+    );
+  } catch (err) {
+    return response.status(400).send(`Webhook Error: ${err.message}`);
   }
 
-  // Handle the event
   switch (event.type) {
+
     case 'payment_intent.succeeded': {
 
       const paymentIntent = event.data.object;
       const paymentIntentId = paymentIntent.id;
 
-      // Getting Session Metadata
       const session = await stripeInstance.checkout.sessions.list({
         payment_intent: paymentIntentId,
       });
@@ -98,7 +111,9 @@ export const stripeWebhooks = async (request, response) => {
 
       const purchaseData = await Purchase.findById(purchaseId)
       const userData = await User.findById(purchaseData.userId)
-      const courseData = await Course.findById(purchaseData.courseId.toString())
+      const courseData = await Course.findById(
+        purchaseData.courseId.toString()
+      )
 
       courseData.enrolledStudents.push(userData)
       await courseData.save()
@@ -111,11 +126,12 @@ export const stripeWebhooks = async (request, response) => {
 
       break;
     }
+
     case 'payment_intent.payment_failed': {
+
       const paymentIntent = event.data.object;
       const paymentIntentId = paymentIntent.id;
 
-      // Getting Session Metadata
       const session = await stripeInstance.checkout.sessions.list({
         payment_intent: paymentIntentId,
       });
@@ -128,10 +144,14 @@ export const stripeWebhooks = async (request, response) => {
 
       break;
     }
+
     default:
       console.log(`Unhandled event type ${event.type}`);
   }
+  */
 
-  // Return a response to acknowledge receipt of the event
-  response.json({ received: true });
+  response.json({
+    success: true,
+    message: "Stripe webhook temporarily disabled"
+  });
 }
